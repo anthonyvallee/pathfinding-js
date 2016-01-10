@@ -112,8 +112,8 @@
         }
         hScore = current.gScore + 1               // Length of this path.
         if (!openSet.exists(neighbor)) {	        // If neighbor not in openSet,
-
-          openSet.add(neighbor, neighbor.fscore); // we have discovered a new node.
+          console.log(neighbor.fScore)
+          openSet.add(neighbor, neighbor.fScore); // we have discovered a new node.
         }
         else if (hScore >= neighbor.gScore) {
           continue	                              // This is not a better path.
