@@ -32,7 +32,7 @@
   };
   Grid.prototype.getNode = function(x, y) {
     var i = this.x * x + y
-    return this.cells[i]
+    return this.nodes[i]
   };
   Grid.prototype.distance = function(node1, node2) {
     return Math.abs(node2.x - node1.x) + Math.abs(node2.y - node1.y)
@@ -85,7 +85,7 @@
     this.init();
   }
   AStar.prototype.init = function() {
-    for (var i = 0, l = this.nodes.length; i < l; i++) {
+    for (var i = 0, l = this.grid.nodes.length; i < l; i++) {
       // Init neighbors
       grid.nodes[i].initNeighbors();
       // Init heuristic
@@ -100,14 +100,14 @@
     openSet.add(this.start, this.start.fScore);   // initially containing the start node.
 
     while (openSet.length) {
-      var current = openSet.pop();                // Set the current node to the node in openSet having the lowest fScore value and remove it from the openSet.
+      var current = openSet.pop().element;                // Set the current node to the node in openSet having the lowest fScore value and remove it from the openSet.
       if (current === this.goal) {
         return this.reconstructPath(this.goal)
       }
       closedSet.push(current)
       for (var i = 0, l = current.neighbors.length; i < l; i++) { // For each neighbors of current node.
         var neighbor = current.neighbors[i];      // Current neighbor node.
-        if (closeSet.exists(neighbor)) {          // If neighbor in closedSet.
+        if (closedSet.exists(neighbor)) {          // If neighbor in closedSet.
           continue                                // Ignore the neighbor which is already evaluated.
         }
         hScore = current.gScore + 1               // Length of this path.
@@ -140,6 +140,8 @@
   var grid = new Grid(30, 30);
   var start = grid.getNode(0, 0);
   var goal = grid.getNode(25, 25);
+  var astar = new AStar(grid, start, goal);
+  astar.solve();
 
 
 </script>
