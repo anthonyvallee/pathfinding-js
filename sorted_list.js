@@ -1,16 +1,8 @@
 'use strict';
-/*
-  SortedArray class used to sort elements in an array.
-  The position of the elements are specified by the given priority
-  from SortedArray#add.
-  Constructor:
-  Args:
-    (1) compare(opt.):  comparation function that dictates how the
-                        priorities are sorted in the array.
-*/
+
 function SortedArray(compare) {
   Array.apply(this);
-  if (!compare) {
+  if (compare === undefined) {
     this.compare = function() {
         return a >= b;
     };
@@ -18,6 +10,10 @@ function SortedArray(compare) {
     this.compare = compare;
   }
 };
+
+var sort = function(a, b) {
+  return a >= b;
+}
 SortedArray.prototype = Array.prototype;
 SortedArray.prototype.constructor = SortedArray;
 
@@ -63,7 +59,7 @@ SortedArray.prototype.exists = function(element) {
 };
 
 /*
-  Method used to insert element at given position.
+  Method used to insert element at given position. 
   !WARNING: should not be used, this is an internal feature.
   Args:
     (1) index:    position at which element will be inserted.
