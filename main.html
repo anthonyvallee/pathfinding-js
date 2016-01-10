@@ -97,10 +97,10 @@
     this.start.gScore = 0;                        // Cost from start along best known path.
     var closedSet = [];                           // The set of nodes already evaluated.
     var openSet = new SortedArray();              // The set of tentative nodes to be evaluated,
-    openSet.add(this.start, this.start.fScore);   // initially containing the start node.
+    openSet.add(this.start, 0);                   // initially containing the start node.
 
     while (openSet.length) {
-      var current = openSet.pop().element;                // Set the current node to the node in openSet having the lowest fScore value and remove it from the openSet.
+      var current = openSet.pop().element;        // Set the current node to the node in openSet having the lowest fScore value and remove it from the openSet.
       if (current === this.goal) {
         return this.reconstructPath(this.goal)
       }
@@ -112,6 +112,7 @@
         }
         hScore = current.gScore + 1               // Length of this path.
         if (!openSet.exists(neighbor)) {	        // If neighbor not in openSet,
+
           openSet.add(neighbor, neighbor.fscore); // we have discovered a new node.
         }
         else if (hScore >= neighbor.gScore) {
