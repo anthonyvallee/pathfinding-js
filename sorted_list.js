@@ -1,6 +1,6 @@
 'use strict';
 
-var SortedArray = function(compare) {
+function SortedArray(compare) {
   Array.apply(this);
   this.compare = compare;
 };
