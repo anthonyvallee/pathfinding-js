@@ -1,152 +1,160 @@
 <html>
 <body>
-  <script src="sorted_array.js" charset="utf-8"></script>
-<script>
-  var Grid = function(x, y) {
-    this.x = x;
-    this.y = y;
-    this.size = 30;
-    this.nodes = [];
-    this.initGrid();
-  };
-  Grid.prototype.initGrid = function() {
-    // Creates Nodes
-    for (var i = 0; i < this.x; i++) {
-      for (var j = 0; j < this.y; j++) {
-        this.addNode(i, j)
+  <script src="sorted_array.js"></script>
+  <script>
+    var Grid = function(x, y) {
+      this.x = x;
+      this.y = y;
+      this.size = 30;
+      this.nodes = [];
+      this.initGrid();
+    };
+    Grid.prototype.initGrid = function() {
+      // Creates Nodes
+      for (var i = 0; i < this.x; i++) {
+        for (var j = 0; j < this.y; j++) {
+          this.addNode(i, j)
+        }
+      }
+    };
+    Grid.prototype.draw = function() {
+      for (var i = 0, l = this.nodes.length; i < l; i++) {
+        var cell = this.nodes[i];
+        var node = document.createElement('div');
+        node.setAttribute('style', 'position: absolute; top: ' + cell.y * this.size + 'px; left: ' + cell.x * this.size + 'px; height: ' + this.size + 'px; width: ' + this.size + 'px; border: 1px solid black;font-size:10px;');
+        var textNode = document.createTextNode(cell.x + ':' + cell.y + ':' + i);
+        node.appendChild(textNode);
+        document.body.appendChild(node);
       }
     }
-  };
-  Grid.prototype.draw = function() {
-    for (var i = 0, l = this.nodes.length; i < l; i++) {
-      var cell = this.nodes[i];
-      var node = document.createElement('div');
-      node.setAttribute('style', 'position: absolute; top: ' + cell.y * this.size + 'px; left: ' + cell.x * this.size + 'px; height: ' + this.size + 'px; width: ' + this.size + 'px; border: 1px solid black;font-size:10px;');
-      var textNode = document.createTextNode(cell.x + ':' + cell.y + ':' + i);
-      node.appendChild(textNode);
-      document.body.appendChild(node);
+    Grid.prototype.addNode = function(x, y) {
+      this.nodes.push(new Node(this, x, y));
+    };
+    Grid.prototype.getNode = function(x, y) {
+      var i = this.x * x + y
+      return this.nodes[i]
+    };
+    Grid.prototype.distance = function(node1, node2) {
+      return Math.abs(node2.x - node1.x) + Math.abs(node2.y - node1.y)
     }
-  }
-  Grid.prototype.addNode = function(x, y) {
-    this.nodes.push(new Node(this, x, y));
-  };
-  Grid.prototype.getNode = function(x, y) {
-    var i = this.x * x + y
-    return this.nodes[i]
-  };
-  Grid.prototype.distance = function(node1, node2) {
-    return Math.abs(node2.x - node1.x) + Math.abs(node2.y - node1.y)
-  }
 
 
 
-  var Node = function(grid, x, y) {
-    this.grid = grid
-    this.x = x;
-    this.y = y;
-    this.type = undefined
-    this.fScore = 9999999
-    this.gScore = 9999999
-    this.neighbors = []
-    this.cameFrom = undefined
-  };
-  Node.prototype.topNode = function() {
-    return this.grid.getNode(this.x, this.y + 1);
-  };
-  Node.prototype.rightNode = function() {
-    return this.grid.getNode(this.x + 1, this.y);
-  };
-  Node.prototype.downNode = function() {
-    return this.grid.getNode(this.x, this.y - 1);
-  };
-  Node.prototype.leftNode = function() {
-    return this.grid.getNode(this.x - 1, this.y);
-  };
-  Node.prototype.initNeighbors = function() {
-    this.neighbors = [
-      this.topNode(),
-      this.rightNode(),
-      this.downNode(),
-      this.leftNode()
-    ]
-  }
-  Node.prototype.initHeuristicCost = function(goal) {
-    this.heuristic = Math.abs(goal.x - this.x) + Math.abs(goal.y - this.y)
-  }
-  Node.prototype.setfScore = function() {
-    this.fscore = this.gScore + this.heuristic
-    return this.heuristic
-  }
-
-  var AStar = function(grid, start, goal) {
-    this.grid = grid;
-    this.start = start;
-    this.goal = goal;
-    this.init();
-  }
-  AStar.prototype.init = function() {
-    for (var i = 0, l = this.grid.nodes.length; i < l; i++) {
-      // Init neighbors
-      grid.nodes[i].initNeighbors();
-      // Init heuristic
-      grid.nodes[i].initHeuristicCost(this.goal);
+    var Node = function(grid, x, y) {
+      this.grid = grid
+      this.x = x;
+      this.y = y;
+      this.type = undefined
+      this.fScore = 9999999
+      this.gScore = 9999999
+      this.neighbors = []
+      this.cameFrom = undefined
+    };
+    Node.prototype.topNode = function() {
+      return this.grid.getNode(this.x, this.y + 1);
+    };
+    Node.prototype.rightNode = function() {
+      return this.grid.getNode(this.x + 1, this.y);
+    };
+    Node.prototype.downNode = function() {
+      return this.grid.getNode(this.x, this.y - 1);
+    };
+    Node.prototype.leftNode = function() {
+      return this.grid.getNode(this.x - 1, this.y);
+    };
+    Node.prototype.initNeighbors = function() {
+      this.neighbors = [
+        this.topNode(),
+        this.rightNode(),
+        this.downNode(),
+        this.leftNode()
+      ]
     }
-  }
-  AStar.prototype.solve = function() {
-    this.start.setfScore(goal);                   // Estimated total cost from start to goal.
-    this.start.gScore = 0;                        // Cost from start along best known path.
-    var closedSet = [];                           // The set of nodes already evaluated.
-    var openSet = new SortedArray();              // The set of tentative nodes to be evaluated,
-    openSet.add(this.start, 0);                   // initially containing the start node.
+    Node.prototype.initHeuristicCost = function(goal) {
+      this.heuristic = Math.abs(goal.x - this.x) + Math.abs(goal.y - this.y)
+    }
+    Node.prototype.setfScore = function() {
+      this.fscore = this.gScore + this.heuristic
+      return this.heuristic
+    }
 
-    while (openSet.length) {
-      var current = openSet.pop().element;        // Set the current node to the node in openSet having the lowest fScore value and remove it from the openSet.
-      if (current === this.goal) {
-        return this.reconstructPath(this.goal)
+    Array.prototype.exists = function(element) {
+      for (var i = 0, length = this.length; i < length; i++) {
+        if (this[i] === element) return true;
       }
-      closedSet.push(current)
-      for (var i = 0, l = current.neighbors.length; i < l; i++) { // For each neighbors of current node.
-        var neighbor = current.neighbors[i];      // Current neighbor node.
-        if (closedSet.exists(neighbor)) {          // If neighbor in closedSet.
-          continue                                // Ignore the neighbor which is already evaluated.
-        }
-        hScore = current.gScore + 1               // Length of this path.
-        if (!openSet.exists(neighbor)) {	        // If neighbor not in openSet,
-          console.log(neighbor.fScore)
-          openSet.add(neighbor, neighbor.fScore); // we have discovered a new node.
-        }
-        else if (hScore >= neighbor.gScore) {
-          continue	                              // This is not a better path.
-        }
-        neighbor.cameFrom = current               // This path is the best until now. Record it!
-        neighbor.gScore = hScore
-        neighbor.fScore = neighbor.gScore + neighbor.heuristic
+      return false;
+    };
+
+    var AStar = function(grid, start, goal) {
+      this.grid = grid;
+      this.start = start;
+      this.goal = goal;
+      this.init();
+    }
+    AStar.prototype.init = function() {
+      for (var i = 0, l = this.grid.nodes.length; i < l; i++) {
+        // Init neighbors
+        grid.nodes[i].initNeighbors();
+        // Init heuristic
+        grid.nodes[i].initHeuristicCost(this.goal);
       }
     }
-    console.log("Failure");
-    return
-  }
-  AStar.prototype.reconstructPath = function(current) {
-    var path = [current]
-    while (current.cameFrom != null) {
-      current = current.cameFrom
-      path.push(current)
+    AStar.prototype.solve = function() {
+      this.start.setfScore(goal);                   // Estimated total cost from start to goal.
+      this.start.gScore = 0;                        // Cost from start along best known path.
+      var closedSet = [];                           // The set of nodes already evaluated.
+      var openSet = new SortedArray();              // The set of tentative nodes to be evaluated,
+      openSet.add(this.start, 0);                   // initially containing the start node.
+
+      while (openSet.length) {
+        console.log(openSet.length);
+        var current = openSet.shift().element;        // Set the current node to the node in openSet having the lowest fScore value and remove it from the openSet.
+        if (current === this.goal) {
+          return this.reconstructPath(this.goal)
+        }
+        closedSet.push(current)
+        for (var i = 0, l = current.neighbors.length; i < l; i++) { // For each neighbors of current node.
+          var neighbor = current.neighbors[i];      // Current neighbor node.
+          if (neighbor == null) continue
+          if (closedSet.exists(neighbor)) {          // If neighbor in closedSet.
+            continue                                // Ignore the neighbor which is already evaluated.
+          }
+          hScore = current.gScore + 1               // Length of this path.
+          if (!openSet.exists(neighbor)) {	        // If neighbor not in openSet,
+            console.log(neighbor.fScore)
+            openSet.add(neighbor, neighbor.fScore); // we have discovered a new node.
+          }
+          else if (hScore >= neighbor.gScore) {
+            continue	                              // This is not a better path.
+          }
+          neighbor.cameFrom = current               // This path is the best until now. Record it!
+          neighbor.gScore = hScore
+          neighbor.fScore = neighbor.gScore + neighbor.heuristic
+        }
+      }
+      console.log("Failure");
+      return
     }
-    return path
-  }
+    AStar.prototype.reconstructPath = function(current) {
+      var path = [current]
+      while (current.cameFrom != null) {
+        current = current.cameFrom
+        path.push(current)
+      }
+      return path
+    }
 
 
 
 
-  var grid = new Grid(30, 30);
-  var start = grid.getNode(0, 0);
-  var goal = grid.getNode(25, 25);
-  var astar = new AStar(grid, start, goal);
-  astar.solve();
+    var grid = new Grid(5, 5);
+    var start = grid.getNode(0, 0);
+    var goal = grid.getNode(4, 4);
+    var astar = new AStar(grid, start, goal);
+    var result = astar.solve();
+    console.log(result);
 
 
-</script>
-
-
+  </script>
 </body>
 </html>

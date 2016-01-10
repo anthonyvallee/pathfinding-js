@@ -11,7 +11,7 @@
 function SortedArray(compare) {
   Array.apply(this);
   if (!compare) {
-    this.compare = function() {
+    this.compare = function(a, b) {
         return a >= b;
     };
   } else {
