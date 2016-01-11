@@ -1,11 +1,13 @@
 <html>
 <body>
+  <div id="path"></div>
+  <div id="grid"></div>
   <script src="sorted_array.js"></script>
   <script>
     var Grid = function(x, y) {
       this.x = x;
       this.y = y;
-      this.size = 30;
+      this.size = 5;
       this.nodes = [];
       this.initGrid();
     };
@@ -17,22 +19,40 @@
         }
       }
     };
+    Grid.prototype.trigger = function(e, i) {
+      e.target.setAttribute('style', e.target.getAttribute('style') + 'background-color:red;')
+      this.nodes[i].cost = 200;
+      var path = astar.solve();
+      this.drawPath(path);
+    }
     Grid.prototype.draw = function() {
       for (var i = 0, l = this.nodes.length; i < l; i++) {
-        var cell = this.nodes[i];
-        var node = document.createElement('div');
-        node.setAttribute('style', 'position: absolute; top: ' + cell.y * this.size + 'px; left: ' + cell.x * this.size + 'px; height: ' + this.size + 'px; width: ' + this.size + 'px; border: 1px solid black;font-size:10px;');
-        var textNode = document.createTextNode(cell.x + ':' + cell.y + ':' + i);
-        node.appendChild(textNode);
-        document.body.appendChild(node);
+        var node = this.nodes[i];
+        var cell = document.createElement('div');
+        cell.setAttribute('style', 'position: absolute; top: ' + node.y * this.size + 'px; left: ' + node.x * this.size + 'px; height: ' + this.size + 'px; width: ' + this.size + 'px; border: 1px solid rgba(0,0,0,0.05);font-size:10px;');
+        cell.setAttribute('onmouseover', 'grid.trigger(event, ' + node.index + ')')
+        //var textNode = document.createTextNode(node.x + ':' + node.y + ':' + i);
+        //cell.appendChild(textNode);
+        document.getElementById('grid').appendChild(cell);
+      }
+    }
+    Grid.prototype.drawPath = function(path) {
+      document.getElementById('path').innerHTML = ''
+      for (var i = 0, l = path.length; i < l; i++) {
+        var node = path[i];
+        var nodeEl = document.createElement('div');
+        nodeEl.setAttribute('style', 'position: absolute; top: ' + node.y * this.size + 'px; left: ' + node.x * this.size + 'px; height: ' + this.size + 'px; width: ' + this.size + 'px; background-color:blue;');
+        document.getElementById('path').appendChild(nodeEl);
       }
     }
     Grid.prototype.addNode = function(x, y) {
-      this.nodes.push(new Node(this, x, y));
+      var node = new Node(this, x, y)
+      l = this.nodes.push(node);
+      node.index = l - 1;
     };
     Grid.prototype.getNode = function(x, y) {
-      var i = this.x * x + y
-      return this.nodes[i]
+      if (x < 0 || x > this.x-1 || y < 0 || y > this.y-1) { return undefined }
+      return this.nodes[this.x * x + y]
     };
     Grid.prototype.distance = function(node1, node2) {
       return Math.abs(node2.x - node1.x) + Math.abs(node2.y - node1.y)
@@ -44,38 +64,50 @@
       this.grid = grid
       this.x = x;
       this.y = y;
-      this.type = undefined
-      this.fScore = 9999999
-      this.gScore = 9999999
+      this.fScore = 1000000;
+      this.gScore = 1000000;
+      this.cost;
       this.neighbors = []
       this.cameFrom = undefined
     };
     Node.prototype.topNode = function() {
-      return this.grid.getNode(this.x, this.y + 1);
+      return this.grid.getNode(this.x, this.y - 1);
+    };
+    Node.prototype.topRightNode = function() {
+      return this.grid.getNode(this.x + 1, this.y - 1);
     };
     Node.prototype.rightNode = function() {
       return this.grid.getNode(this.x + 1, this.y);
     };
+    Node.prototype.downRightNode = function() {
+      return this.grid.getNode(this.x + 1, this.y + 1);
+    };
     Node.prototype.downNode = function() {
-      return this.grid.getNode(this.x, this.y - 1);
+      return this.grid.getNode(this.x, this.y + 1);
+    };
+    Node.prototype.downLeftNode = function() {
+      return this.grid.getNode(this.x - 1, this.y + 1);
     };
     Node.prototype.leftNode = function() {
       return this.grid.getNode(this.x - 1, this.y);
     };
+    Node.prototype.topLeftNode = function() {
+      return this.grid.getNode(this.x - 1, this.y - 1);
+    };
     Node.prototype.initNeighbors = function() {
       this.neighbors = [
         this.topNode(),
+        this.topRightNode(),
         this.rightNode(),
+        this.downRightNode(),
         this.downNode(),
-        this.leftNode()
+        this.downLeftNode(),
+        this.leftNode(),
+        this.topLeftNode(),
       ]
     }
     Node.prototype.initHeuristicCost = function(goal) {
       this.heuristic = Math.abs(goal.x - this.x) + Math.abs(goal.y - this.y)
-    }
-    Node.prototype.setfScore = function() {
-      this.fscore = this.gScore + this.heuristic
-      return this.heuristic
     }
 
     Array.prototype.exists = function(element) {
@@ -90,69 +122,61 @@
       this.start = start;
       this.goal = goal;
       this.init();
+      this.dist = [1.0, 1.41, 1.0, 1.41, 1.0, 1.41, 1.0, 1.41];
     }
     AStar.prototype.init = function() {
       for (var i = 0, l = this.grid.nodes.length; i < l; i++) {
-        // Init neighbors
-        grid.nodes[i].initNeighbors();
-        // Init heuristic
-        grid.nodes[i].initHeuristicCost(this.goal);
+        this.grid.nodes[i].initNeighbors();                              // Initialize neighbors.
+        this.grid.nodes[i].initHeuristicCost(this.goal);                 // Initialize heuristic cost.
       }
     }
     AStar.prototype.solve = function() {
-      this.start.setfScore(goal);                   // Estimated total cost from start to goal.
-      this.start.gScore = 0;                        // Cost from start along best known path.
-      var closedSet = [];                           // The set of nodes already evaluated.
-      var openSet = new SortedArray();              // The set of tentative nodes to be evaluated,
-      openSet.add(this.start, 0);                   // initially containing the start node.
+      window.tic = new Date().getTime();
+      this.start.fScore = this.heuristic;
+      this.closedSet = [];                                           // The set of nodes already evaluated.
+      this.openSet = [this.start];                                   // The set of nodes to be evaluated, initially containing the start node.
 
-      while (openSet.length) {
-        console.log(openSet.length);
-        var current = openSet.shift().element;        // Set the current node to the node in openSet having the lowest fScore value and remove it from the openSet.
-        if (current === this.goal) {
-          return this.reconstructPath(this.goal)
-        }
-        closedSet.push(current)
+      while (this.openSet.length) {
+        var i = this.openSet.length, index = 0;
+        while(i--) { if (this.openSet[i].fScore < this.openSet[index].fScore) index = i; }
+        var current = this.openSet[index];
+        if (current === this.goal) return this.reconstructPath(this.goal);
+        this.openSet.splice(index, 1);
+        this.closedSet.push(current);
+
         for (var i = 0, l = current.neighbors.length; i < l; i++) { // For each neighbors of current node.
-          var neighbor = current.neighbors[i];      // Current neighbor node.
-          if (neighbor == null) continue
-          if (closedSet.exists(neighbor)) {          // If neighbor in closedSet.
-            continue                                // Ignore the neighbor which is already evaluated.
-          }
-          hScore = current.gScore + 1               // Length of this path.
-          if (!openSet.exists(neighbor)) {	        // If neighbor not in openSet,
-            console.log(neighbor.fScore)
-            openSet.add(neighbor, neighbor.fScore); // we have discovered a new node.
-          }
-          else if (hScore >= neighbor.gScore) {
-            continue	                              // This is not a better path.
-          }
-          neighbor.cameFrom = current               // This path is the best until now. Record it!
-          neighbor.gScore = hScore
-          neighbor.fScore = neighbor.gScore + neighbor.heuristic
+          var neighbor = current.neighbors[i];                      // Current neighbor node.
+          if (neighbor == null) continue;
+          if (this.closedSet.exists(neighbor)) continue;            // Ignore the neighbor which is already evaluated.
+          var hScore = current.gScore + this.dist[i] + (current.cost || 0);    // Cost of this path.
+          if (!this.openSet.exists(neighbor)) this.openSet.push(neighbor);    // If neighbor not in openSet, we have discovered a new node.
+          else if (hScore >= neighbor.gScore) continue;             // This is not a better path.
+          neighbor.cameFrom = current;                              // This path is the best until now. Record it!
+          neighbor.gScore = hScore;
+          neighbor.fScore = neighbor.gScore + neighbor.heuristic;
         }
       }
-      console.log("Failure");
       return
     }
     AStar.prototype.reconstructPath = function(current) {
       var path = [current]
       while (current.cameFrom != null) {
-        current = current.cameFrom
-        path.push(current)
+        current = current.cameFrom;
+        path.push(current);
       }
+      window.tac = new Date().getTime();
+      console.log(window.tac - window.tic);
       return path
     }
 
 
 
 
-    var grid = new Grid(5, 5);
+    var grid = new Grid(100, 100);
     var start = grid.getNode(0, 0);
-    var goal = grid.getNode(4, 4);
+    var goal = grid.getNode(99, 99);
+    grid.draw()
     var astar = new AStar(grid, start, goal);
-    var result = astar.solve();
-    console.log(result);
 
 
   </script>
